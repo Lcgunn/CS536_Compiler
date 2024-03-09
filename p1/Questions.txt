@@ -1,0 +1,18 @@
+1) Each scope in your SymTable is a HashMap. Java also has a TreeMap implementation of the Map interface. 
+The HashMap is implemented using a hashtable, while the TreeMap is implemented using a red-black tree. 
+Why is the HashMap preferable in this situation? When would a TreeMap be preferable to a HashMap?
+
+In this scenario, the symbol table doesn't necessarily need to be organized in a particular way. 
+The main things that are needed from the table is to be able to add to it, remove from it, and 
+look at the elements in the table. Though both HashMaps and TreeMaps have the funstions add(),
+remove(), and contains(), HashMaps can do these things much faster with a constant time (O(1)). 
+Since these are the only things needed it makes more sense to use HashMaps.
+TreeMaps would be preferable when there are memory limitations and when you want to extract objects in an order.
+
+
+2) When implementing the List in your SymTable, you had a choice between an ArrayList and a LinkedList. 
+Which implementation did you choose? Why is the implementation you chose preferable to the alternative?
+
+I chose to use an ArrayList instead of a LinkedList. The main reason I made this choice is because ArrayLists have
+an isEmpty() function which is useful for throwing the EmptySymTableException. ArrayLists and LinkedLists share a
+lot of the same functions outside of that. This one function was good for simplifying my code.

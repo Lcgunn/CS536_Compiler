@@ -1,0 +1,27 @@
+
+++++ SYMBOL TABLE
+{}
+
+++++ END TABLE
+
+++++ SYMBOL TABLE
+{ddd=double}
+{ccc=void}
+{aaa=bool, bbb=int}
+
+++++ END TABLE
+
+++++ SYMBOL TABLE
+{ccc=void}
+{aaa=bool, bbb=int}
+
+++++ END TABLE
+
+++++ SYMBOL TABLE
+{aaa=bool, bbb=int}
+
+++++ END TABLE
+
+++++ SYMBOL TABLE
+
+++++ END TABLE
