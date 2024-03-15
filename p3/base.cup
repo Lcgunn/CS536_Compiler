@@ -83,7 +83,29 @@ non terminal IdNode           id;
  
  
 /* NOTE: Add precedence and associativity declarations here */
+// Lowest to highest
+// Assignment operator =
+precedence right ASSIGN;
 
+// Logical or |
+precedence left OR;
+
+// and &
+precedence left AND;
+
+// Relational/equality operators
+precedence nonassoc EQUALS;
+precedence nonassoc NOTEQUALS;
+precedence nonassoc GREATER;
+precedence nonassoc GREATEREQ;
+precedence nonassoc LESS;
+precedence nonassoc LESSEQ;
+
+// add and sub
+
+// mult and divide
+
+//unary not
 
 start with program;
 
