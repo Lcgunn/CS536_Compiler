@@ -247,6 +247,11 @@ class FctnDeclNode extends DeclNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+        doIndent(p, indent);
+        myType.unparse(p, 0);
+        p.print(" ");
+        myId.unparse(p, 0);
+        p.println(".");
     }
 
     // 4 children
@@ -263,6 +268,11 @@ class FormalDeclNode extends DeclNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+        doIndent(p, indent);
+        myType.unparse(p, 0);
+        p.print(" ");
+        myId.unparse(p, 0);
+        p.println(".");
     }
 
     // 2 children
@@ -305,6 +315,7 @@ class IntegerNode extends TypeNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+        p.print("integer");
     }
 }
 
@@ -313,6 +324,7 @@ class VoidNode extends TypeNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+        p.print("void");
     }
 }
 

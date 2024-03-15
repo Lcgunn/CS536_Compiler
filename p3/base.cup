@@ -78,6 +78,11 @@ non terminal ProgramNode      program;
 non terminal LinkedList       declList;
 non terminal DeclNode         decl;
 non terminal VarDeclNode      varDecl;
+non terminal LinkedList       varDeclList;
+non terminal FctnDeclNode     fctnDecl;
+non terminal FormalDeclNode   formals;
+non terminal FormalDeclNode   formalDecl;
+non terminal FormalsListNode  formalsList;
 non terminal TypeNode         type;
 non terminal IdNode           id;
  
@@ -124,6 +129,18 @@ declList        ::= declList:dl decl:d
 decl            ::= varDecl:v
                 {: RESULT = v;
                 :}
+                | fctnDecl:f
+                {: RESULT = f;
+                :}
+                ;
+
+varDeclList     ::= varDeclList:vl varDecl:value
+                {: vl.addLast(v);
+                   RESULT = vl;
+                :}
+                | /* epsilon */
+                {: RESULT = new LinkedList<VarDeclNode>();
+                :}
                 ;
 
 varDecl         ::= type:t id:i DOT
@@ -131,8 +148,46 @@ varDecl         ::= type:t id:i DOT
                 :}
                 ;
 
+fctnDecl        ::= type:t id:i formalsList:fl fctnBody:fb
+                {: 
+                   RESULT = new FctnDeclNode(t, i, fl, fb);
+                :}
+                ;
+
+formals         ::= LCURLY RCURLY
+                {: RESULT = {};
+                :}
+                | LCURLY formalsList:fl RCURLY
+                {: RESULT = {fl};
+                :}
+                ;
+
+formalsList     ::= formalDecl:f
+                {: RESULT = f;
+                :}
+                | formalDecl:f COMMA formalsList:fl
+                {: RESULT = f, fl;
+                :}
+                ;
+
+formalDecl      ::= type:t id:i
+                {: RESULT = new FormalDeclNode(t, i);
+                :}
+                ;
+
+fctnBody        ::= LSQBRACKET varDeclList:vl stmtList:sl RSQBRACKET
+                {: RESULT = [];
+                :}
+                ;
+
 type            ::= LOGICAL
                 {: RESULT = new LogicalNode();
+                :}
+                | INTEGER
+                {: RESULT = new IntegerNode();
+                :}
+                | VOID
+                {: RESULT = new VoidNode();
                 :}
                 ;
 
