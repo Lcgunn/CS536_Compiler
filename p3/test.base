@@ -2,3 +2,4 @@ logical a.
 logical b.
 integer c.
 void d.
+formalDecl a, formalsList fl.

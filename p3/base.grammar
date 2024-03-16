@@ -107,6 +107,7 @@ type            ::= INTEGER
 	
 loc             ::= id
                 | loc COLON id
+                ;
 	
 id              ::= ID
                 ;

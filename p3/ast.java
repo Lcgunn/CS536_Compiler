@@ -184,6 +184,18 @@ class FormalsListNode extends ASTnode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+        Iterator it = myFormals.iterator();
+        try {
+            p.print("{");
+            while (it.hasNext()) {
+                ((FormalDeclNode)it.next()).unparse(p, indent);
+                p.print(", ");
+            }
+            p.print("}");
+        } catch (NoSuchElementException ex) {
+            System.err.println("unexpected NoSuchElementException in FormalDeclNode.print");
+            System.exit(-1);
+        }
     }
 
     // list of children (FormalDeclNodes)
@@ -353,6 +365,9 @@ class AssignStmtNode extends StmtNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+        doIndent(p, indent);
+        myAssign.unparse(p,0);
+        p.print(".");
     }
 
     // 1 child
@@ -585,6 +600,11 @@ class AssignExpNode extends ExpNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+        doIndent(p, indent);
+        myLhs.unparse(p, 0);
+        p.print(" = ");
+        myExp.unparse(p, 0);
+        p.print(".");
     }
 
     // 2 children
@@ -664,6 +684,11 @@ class PlusNode extends BinaryExpNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+        doIndent(p, indent);
+        super.myExp1.unparse(p, 0);
+        p.print(" + ");
+        super.myExp2.unparse(p, 0);
+        p.print(".");
     }
 }
 

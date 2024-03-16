@@ -80,10 +80,18 @@ non terminal DeclNode         decl;
 non terminal VarDeclNode      varDecl;
 non terminal LinkedList       varDeclList;
 non terminal FctnDeclNode     fctnDecl;
-non terminal FormalDeclNode   formals;
+non terminal TupleDeclNode    tupleDecl;
+non terminal DeclListNode     tupleBody;
+non terminal FormalsListNode  formals;
+non terminal LinkedList       formalsList;
 non terminal FormalDeclNode   formalDecl;
-non terminal FormalsListNode  formalsList;
+non terminal FctnBodyNode     fctnBody;
+non terminal LinkedList       stmtList;
+non terminal StmtNode         stmt;
+non terminal AssignExpNode    assignExp;
+non terminal CallExpNode      fctnCall;
 non terminal TypeNode         type;
+non terminal ExpNode          loc;
 non terminal IdNode           id;
  
  
@@ -134,7 +142,7 @@ decl            ::= varDecl:v
                 :}
                 ;
 
-varDeclList     ::= varDeclList:vl varDecl:value
+varDeclList     ::= varDeclList:vl varDecl:v
                 {: vl.addLast(v);
                    RESULT = vl;
                 :}
@@ -148,25 +156,28 @@ varDecl         ::= type:t id:i DOT
                 :}
                 ;
 
-fctnDecl        ::= type:t id:i formalsList:fl fctnBody:fb
+fctnDecl        ::= type:t id:i formals:fl fctnBody:fb
                 {: 
                    RESULT = new FctnDeclNode(t, i, fl, fb);
                 :}
                 ;
 
 formals         ::= LCURLY RCURLY
-                {: RESULT = {};
+                {: RESULT = new FormalsListNode(new LinkedList<FormalDeclNode>());
                 :}
                 | LCURLY formalsList:fl RCURLY
-                {: RESULT = {fl};
+                {: RESULT = new FormalsListNode(fl);
                 :}
                 ;
 
 formalsList     ::= formalDecl:f
-                {: RESULT = f;
+                {: LinkedList<FormalDeclNode> fl = new LinkedList<>();
+                   fl.addLast(f);
+                   RESULT = fl;
                 :}
                 | formalDecl:f COMMA formalsList:fl
-                {: RESULT = f, fl;
+                {: fl.addLast(f); 
+                  RESULT = fl;
                 :}
                 ;
 
@@ -176,9 +187,43 @@ formalDecl      ::= type:t id:i
                 ;
 
 fctnBody        ::= LSQBRACKET varDeclList:vl stmtList:sl RSQBRACKET
-                {: RESULT = [];
+                {: 
+                  RESULT = new FctnBodyNode(vl, sl);
                 :}
                 ;
+
+stmtList        ::= stmtList:sl stmt:s
+                {: sl.addLast(s); 
+                  RESULT = sl;
+                :}
+                | /* epsilon */
+                {: RESULT = new LinkedList<StmtNode>;
+                :}
+                ;
+	
+stmt            ::= assignExp:a DOT
+                {: RESULT = new AssignStmtNode(a);
+                :}
+                | fctnCall:c DOT
+                {: RESULT = new CallStmtNode(c);
+                :}
+                | loc PLUSPLUS DOT
+                {: RESULT = 
+                :}
+                | loc MINUSMINUS DOT
+                | IF exp LSQBRACKET varDeclList stmtList RSQBRACKET
+                | IF exp LSQBRACKET varDeclList stmtList RSQBRACKET ELSE LSQBRACKET varDeclList stmtList RSQBRACKET
+                | WHILE exp LSQBRACKET varDeclList stmtList RSQBRACKET
+                | READ INPUTOP loc DOT
+                | WRITE OUTPUTOP exp DOT				
+                | RETURN exp DOT
+                | RETURN DOT
+                ;
+
+assignExp       ::= loc:l ASSIGN exp:e
+                {: RESULT = new AssignExpNode(l, e);
+                :}
+                ;                
 
 type            ::= LOGICAL
                 {: RESULT = new LogicalNode();
@@ -188,6 +233,15 @@ type            ::= LOGICAL
                 :}
                 | VOID
                 {: RESULT = new VoidNode();
+                :}
+                ;
+
+loc             ::= id:i
+                {: RESULT = i;
+                :}
+                | loc:l COLON id:i
+                {:
+                  RESULT = new TupleAccessExpNode(l, i);
                 :}
                 ;
 
