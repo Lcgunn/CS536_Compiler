@@ -90,6 +90,7 @@ non terminal LinkedList       stmtList;
 non terminal StmtNode         stmt;
 non terminal AssignExpNode    assignExp;
 non terminal CallExpNode      fctnCall;
+non terminal ExpNode          exp;
 non terminal TypeNode         type;
 non terminal ExpNode          loc;
 non terminal IdNode           id;
@@ -188,7 +189,7 @@ formalDecl      ::= type:t id:i
 
 fctnBody        ::= LSQBRACKET varDeclList:vl stmtList:sl RSQBRACKET
                 {: 
-                  RESULT = new FctnBodyNode(vl, sl);
+                  RESULT = new FctnBodyNode(new DeclListNode(vl), new StmtListNode(sl));
                 :}
                 ;
 
@@ -197,7 +198,7 @@ stmtList        ::= stmtList:sl stmt:s
                   RESULT = sl;
                 :}
                 | /* epsilon */
-                {: RESULT = new LinkedList<StmtNode>;
+                {: RESULT = new LinkedList<StmtNode>();
                 :}
                 ;
 	
@@ -207,8 +208,8 @@ stmt            ::= assignExp:a DOT
                 | fctnCall:c DOT
                 {: RESULT = new CallStmtNode(c);
                 :}
-                | loc PLUSPLUS DOT
-                {: RESULT = 
+                | loc:l PLUSPLUS DOT
+                {: RESULT = new PostIncStmtNode(new PlusNode(l, new IntLitNode(1, 1, 1)));
                 :}
                 | loc MINUSMINUS DOT
                 | IF exp LSQBRACKET varDeclList stmtList RSQBRACKET

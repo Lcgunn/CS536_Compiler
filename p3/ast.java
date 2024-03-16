@@ -188,7 +188,7 @@ class FormalsListNode extends ASTnode {
         try {
             p.print("{");
             while (it.hasNext()) {
-                ((FormalDeclNode)it.next()).unparse(p, indent);
+                ((FormalDeclNode)it.next()).unparse(p, 0);
                 p.print(", ");
             }
             p.print("}");
