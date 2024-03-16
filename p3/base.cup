@@ -211,10 +211,18 @@ stmt            ::= assignExp:a DOT
                 | loc:l PLUSPLUS DOT
                 {: RESULT = new PostIncStmtNode(new PlusNode(l, new IntLitNode(1, 1, 1)));
                 :}
-                | loc MINUSMINUS DOT
-                | IF exp LSQBRACKET varDeclList stmtList RSQBRACKET
-                | IF exp LSQBRACKET varDeclList stmtList RSQBRACKET ELSE LSQBRACKET varDeclList stmtList RSQBRACKET
-                | WHILE exp LSQBRACKET varDeclList stmtList RSQBRACKET
+                | loc:l MINUSMINUS DOT
+                {: RESULT = new PostDecStmtNode(new MinusNode(l, new IntLitNode(1, 1, 1)));
+                :}
+                | IF exp:e LSQBRACKET varDeclList:vl stmtList:sl RSQBRACKET
+                {: RESULT = new IfStmtNode(e, new DeclListNode(vl), new StmtListNode(sl));
+                :}
+                | IF exp:e LSQBRACKET varDeclList:vl1 stmtList:sl1 RSQBRACKET ELSE LSQBRACKET varDeclList:vl2 stmtList:sl2 RSQBRACKET
+                {: RESULT = new IfElseStmtNode(e, new DeclListNode(vl1), new StmtListNode(sl1), new DeclListNode(vl2), new StmtListNode(sl2));
+                :}
+                | WHILE exp:e LSQBRACKET varDeclList:vl stmtList:sl RSQBRACKET
+                {: RESULT = new WhileStmtNode(e, new DeclListNode(vl), new StmtListNode(sl));
+                :}
                 | READ INPUTOP loc DOT
                 | WRITE OUTPUTOP exp DOT				
                 | RETURN exp DOT

@@ -1,0 +1,12 @@
+logical a.
+logical b.
+integer b.
+integer c.
+integer x.
+void d.
+integer hello {integer f, integer g} [
+    integer i.
+    integer h.
+]
+void hello {} [
+]

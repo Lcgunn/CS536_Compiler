@@ -1,5 +1,8 @@
 logical a.
 logical b.
+integer b.
 integer c.
+integer x.
 void d.
-{}.
+integer hello {integer g, integer f} [integer i. integer h. g++.]
+void hello {} []
