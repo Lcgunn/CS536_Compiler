@@ -7,6 +7,8 @@ void d.
 integer hello {integer f, integer g} [
     integer i.
     integer h.
+    g++.
+    --.
 ]
 void hello {} [
 ]

@@ -209,7 +209,7 @@ stmt            ::= assignExp:a DOT
                 {: RESULT = new CallStmtNode(c);
                 :}
                 | loc:l PLUSPLUS DOT
-                {: RESULT = new PostIncStmtNode(new PlusNode(l, new IntLitNode(1, 1, 1)));
+                {: RESULT = new PostIncStmtNode(l);
                 :}
                 | loc:l MINUSMINUS DOT
                 {: RESULT = new PostDecStmtNode(new MinusNode(l, new IntLitNode(1, 1, 1)));
@@ -223,10 +223,18 @@ stmt            ::= assignExp:a DOT
                 | WHILE exp:e LSQBRACKET varDeclList:vl stmtList:sl RSQBRACKET
                 {: RESULT = new WhileStmtNode(e, new DeclListNode(vl), new StmtListNode(sl));
                 :}
-                | READ INPUTOP loc DOT
-                | WRITE OUTPUTOP exp DOT				
-                | RETURN exp DOT
+                | READ INPUTOP loc:l DOT
+                {: RESULT = new ReadStmtNode(l);
+                :}
+                | WRITE OUTPUTOP exp:e DOT
+                {: RESULT = new WriteStmtNode(e);
+                :}
+                | RETURN exp:e DOT
+                {: RESULT = new ReturnStmtNode(e);
+                :}
                 | RETURN DOT
+                {:RESULT = new ReturnStmtNode(null);
+                :}
                 ;
 
 assignExp       ::= loc:l ASSIGN exp:e

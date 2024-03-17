@@ -4,5 +4,5 @@ integer b.
 integer c.
 integer x.
 void d.
-integer hello {integer g, integer f} [integer i. integer h. g++.]
+integer hello {integer g, integer f} [integer i. integer h. g++. g--.]
 void hello {} []

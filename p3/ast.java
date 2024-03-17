@@ -395,6 +395,9 @@ class PostIncStmtNode extends StmtNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+        doIndent(p, indent);
+        myExp.unparse(p, indent);
+        p.println("++.");
     }
 
     // 1 child
@@ -408,7 +411,8 @@ class PostDecStmtNode extends StmtNode {
 
     public void unparse(PrintWriter p, int indent) {
         doIndent(p, indent);
-        myExp.unparse(p, 0);
+        myExp.unparse(p, indent);
+        p.println("--.");
     }
 
     // 1 child
@@ -459,10 +463,8 @@ class IfElseStmtNode extends StmtNode {
         p.print("if ");
         myExp.unparse(p, 0);
         p.println("[");
-        doIndent(p, indent);
-        myThenDeclList.unparse(p, indent);
+        myThenDeclList.unparse(p, (indent + 4));
         p.println();
-        doIndent(p, indent);
         myThenStmtList.unparse(p, indent);
         p.println();
         doIndent(p, indent);
@@ -521,6 +523,10 @@ class ReadStmtNode extends StmtNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+        doIndent(p, indent);
+        p.print(">>");
+        myExp.unparse(p, 0);
+        p.println(".");
     }
 
     // 1 child (actually can only be an IdNode or a TupleAccessNode)
@@ -533,6 +539,10 @@ class WriteStmtNode extends StmtNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+        doIndent(p, indent);
+        p.print("<<");
+        myExp.unparse(p, 0);
+        p.println(".");
     }
 
     // 1 child
@@ -545,6 +555,9 @@ class CallStmtNode extends StmtNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+        doIndent(p, indent);
+        myCall.unparse(p, 0);
+        p.println(".");
     }
 
     // 1 child
@@ -557,6 +570,14 @@ class ReturnStmtNode extends StmtNode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+        try{
+            doIndent(p, indent);
+            myExp.unparse(p, 0);
+            p.print(".");
+        } catch(NoSuchElementException ex){
+            doIndent(p, indent);
+            p.print(".");
+        }
     }
 
     // 1 child
