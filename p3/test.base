@@ -9,4 +9,4 @@ tuple Addr { integer doorNum. integer zipCode.}.
 tuple Student { integer id. integer age. tuple Addr addr.}.
 tuple Student raj.
 tuple Student jack.
-void test {integer b, integer y, logical c} [if b == -1 [ x = 4+3*5-y. while c [ y = y*2+x. ] ] else [ x = 0. ]]
+void test {integer b, integer y, logical c} [if b == -1 [ x = 4+3*5-y. while c [ y = y*2+x. x:b++.] ] else [ x = 0. ]]

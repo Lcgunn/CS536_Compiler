@@ -45,6 +45,7 @@ void test {logical c, integer y, integer b} [
         x = ((4 + (3 * 5)) - y).
     while c [
             y = ((y * 2) + x).
+        x:b++.
     ]
     ]
     else [
