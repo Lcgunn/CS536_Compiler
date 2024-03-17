@@ -1,8 +1,7 @@
 logical a.
 logical b.
-integer b.
 integer c.
 integer x.
 void d.
-integer hello {integer g, integer f} [integer i. integer h. g++. g--.]
-void hello {} []
+integer hello {integer g, integer f} [integer i. g++. g = g + 4. h = i. f = h + g. return f.]
+logical compare {integer k, integer b} [if (k < b) [return true.] else [return false.]]

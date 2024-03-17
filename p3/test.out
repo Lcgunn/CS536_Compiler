@@ -1,14 +1,21 @@
 logical a.
 logical b.
-integer b.
 integer c.
 integer x.
 void d.
 integer hello {integer f, integer g} [
     integer i.
-    integer h.
     g++.
-    --.
+    g = (g + 4).
+    h = i.
+    f = (h + g).
+    return f.
 ]
-void hello {} [
+logical compare {integer b, integer k} [
+    if (k < b) [
+        return true.
+    ]
+    else [
+        return false.
+    ]
 ]

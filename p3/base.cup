@@ -29,8 +29,8 @@ terminal                INTEGER;
 terminal                LOGICAL;
 terminal                VOID;
 terminal                TUPLE;
-terminal                TRUE;
-terminal                FALSE;
+terminal TokenVal       TRUE;
+terminal TokenVal       FALSE;
 terminal IdTokenVal     ID;
 terminal IntLitTokenVal INTLITERAL;
 terminal StrLitTokenVal STRLITERAL;
@@ -91,6 +91,7 @@ non terminal StmtNode         stmt;
 non terminal AssignExpNode    assignExp;
 non terminal CallExpNode      fctnCall;
 non terminal ExpNode          exp;
+non terminal ExpNode          term;
 non terminal TypeNode         type;
 non terminal ExpNode          loc;
 non terminal IdNode           id;
@@ -212,7 +213,7 @@ stmt            ::= assignExp:a DOT
                 {: RESULT = new PostIncStmtNode(l);
                 :}
                 | loc:l MINUSMINUS DOT
-                {: RESULT = new PostDecStmtNode(new MinusNode(l, new IntLitNode(1, 1, 1)));
+                {: RESULT = new PostDecStmtNode(l);
                 :}
                 | IF exp:e LSQBRACKET varDeclList:vl stmtList:sl RSQBRACKET
                 {: RESULT = new IfStmtNode(e, new DeclListNode(vl), new StmtListNode(sl));
@@ -240,7 +241,78 @@ stmt            ::= assignExp:a DOT
 assignExp       ::= loc:l ASSIGN exp:e
                 {: RESULT = new AssignExpNode(l, e);
                 :}
-                ;                
+                ;   
+
+exp             ::= assignExp:e
+                {: RESULT = e;
+                :}
+                | exp:e1 PLUS exp:e2
+                {: RESULT = new PlusNode(e1, e2);
+                :}
+                | exp:e1 MINUS exp:e2
+                {: RESULT = new MinusNode(e1,e2);
+                :}
+                | exp:e1 TIMES exp:e2
+                {: RESULT = new TimesNode(e1,e2);
+                :}
+                | exp:e1 DIVIDE exp:e2
+                {: RESULT = new DivideNode(e1,e2);
+                :}
+                | exp:e1 EQUALS exp:e2
+                {: RESULT = new EqualsNode(e1,e2);
+                :}
+                | exp:e1 NOTEQUALS exp:e2
+                {: RESULT = new NotEqualsNode(e1,e2);
+                :}
+                | exp:e1 GREATER exp:e2
+                {: RESULT = new GreaterNode(e1,e2);
+                :}
+                | exp:e1 GREATEREQ exp:e2
+                {: RESULT = new GreaterEqNode(e1,e2);
+                :}
+                | exp:e1 LESS exp:e2
+                {: RESULT = new LessNode(e1,e2);
+                :}
+                | exp:e1 LESSEQ exp:e2
+                {: RESULT = new LessEqNode(e1,e2);
+                :}
+                | exp:e1 AND exp:e2
+                {: RESULT = new AndNode(e1,e2);
+                :}
+                | exp:e1 OR exp:e2
+                {: RESULT = new OrNode(e1,e2);
+                :}
+                | NOT exp:e
+                {: RESULT = new NotNode(e);
+                :}
+                | MINUS term:t
+                {: RESULT = new UnaryMinusNode(t);
+                :}
+                | term:t
+                {: RESULT = t;
+                :}
+                ;             
+
+term            ::= loc:l
+                {: RESULT = l;
+                :}
+                | TRUE:t
+                {: RESULT = new TrueNode(t.lineNum, t.charNum);
+                :}
+                | FALSE:f
+                {: RESULT = new FalseNode(f.lineNum, f.charNum);
+                :}
+                | INTLITERAL:i
+                {: RESULT = new IntLitNode(i.lineNum, i.charNum, i.intVal);
+                :}
+                | STRLITERAL:s
+                {: RESULT = new StringLitNode(s.lineNum, s.charNum, s.strVal);
+                :}
+                | LPAREN exp:e RPAREN
+                {: RESULT = e;
+                :}
+                | fctnCall
+                ;
 
 type            ::= LOGICAL
                 {: RESULT = new LogicalNode();
