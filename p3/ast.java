@@ -182,6 +182,18 @@ class ExpListNode extends ASTnode {
     }
 
     public void unparse(PrintWriter p, int indent) {
+        Iterator it = myExps.iterator();
+        try {
+            while (it.hasNext()) {
+                ((ExpNode)it.next()).unparse(p, 0);
+                if(it.hasNext()){
+                    p.print(", ");
+                }
+            }
+        } catch (NoSuchElementException ex) {
+            System.err.println("unexpected NoSuchElementException in ExpListNode.print");
+            System.exit(-1);
+        }
     }
 
     // list of children (ExpNodes)
@@ -497,10 +509,8 @@ class WhileStmtNode extends StmtNode {
         p.println(" [");
         doIndent(p, indent);
         myDeclList.unparse(p, indent);
-        p.println();
         doIndent(p, indent);
         myStmtList.unparse(p, indent);
-        p.println();
         doIndent(p, indent);
         p.println("]");
     }
@@ -518,7 +528,7 @@ class ReadStmtNode extends StmtNode {
 
     public void unparse(PrintWriter p, int indent) {
         doIndent(p, indent);
-        p.print(">>");
+        p.print("read >> ");
         myExp.unparse(p, 0);
         p.println(".");
     }
@@ -534,7 +544,7 @@ class WriteStmtNode extends StmtNode {
 
     public void unparse(PrintWriter p, int indent) {
         doIndent(p, indent);
-        p.print("<<");
+        p.print("write << ");
         myExp.unparse(p, 0);
         p.println(".");
     }
@@ -707,6 +717,12 @@ class CallExpNode extends ExpNode {
 
     // **** unparse ****
     public void unparse(PrintWriter p, int indent) {
+        doIndent(p, indent);
+        myId.unparse(p, indent);
+        doIndent(p, indent);
+        p.print("(");
+        myExpList.unparse(p, indent);
+        p.print(")");
     }
 
     // 2 children

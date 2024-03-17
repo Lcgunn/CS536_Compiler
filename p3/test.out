@@ -2,20 +2,30 @@ logical a.
 logical b.
 integer c.
 integer x.
-void d.
-integer hello {integer f, integer g} [
+integer computation {integer f, integer g} [
     integer i.
-    g++.
-    g = (g + 4).
-    h = i.
-    f = (h + g).
-    return f.
+    integer h.
+    i = (f + 4).
+    while (g < f) [
+            g++.
+    ]
+    return g.
 ]
-logical compare {integer b, integer k} [
-    if (k < b) [
+logical compare {logical b, logical k} [
+    if k [
         return true.
     ]
     else [
-        return false.
+        if b[
+        return true.
     ]
+    return false.
+    ]
+]
+void rw {integer h} [
+    integer f.
+    read >> h.
+    write << h.
+    compare().
+    computation(f, 2).
 ]

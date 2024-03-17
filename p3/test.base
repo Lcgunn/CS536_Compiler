@@ -2,6 +2,6 @@ logical a.
 logical b.
 integer c.
 integer x.
-void d.
-integer hello {integer g, integer f} [integer i. g++. g = g + 4. h = i. f = h + g. return f.]
-logical compare {integer k, integer b} [if (k < b) [return true.] else [return false.]]
+integer computation {integer g, integer f} [integer i. integer h. i = f + 4. while (g < f) [g++.] return g.]
+logical compare {logical k, logical b} [if k [return true.] else [ if b [return true.] return false.]]
+void rw {integer h} [integer f. read >> h. write << h. compare (). computation(f, 2).]

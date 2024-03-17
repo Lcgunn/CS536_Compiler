@@ -92,6 +92,7 @@ non terminal AssignExpNode    assignExp;
 non terminal CallExpNode      fctnCall;
 non terminal ExpNode          exp;
 non terminal ExpNode          term;
+non terminal LinkedList       actualList;
 non terminal TypeNode         type;
 non terminal ExpNode          loc;
 non terminal IdNode           id;
@@ -311,7 +312,28 @@ term            ::= loc:l
                 | LPAREN exp:e RPAREN
                 {: RESULT = e;
                 :}
-                | fctnCall
+                | fctnCall:c
+                {: RESULT = c;
+                :}
+                ;
+
+fctnCall        ::=  id:i LPAREN RPAREN
+                {: RESULT = new CallExpNode(i);
+                :}
+                | id:i LPAREN actualList:al RPAREN
+                {: RESULT = new CallExpNode(i, new ExpListNode(al));
+                :}
+                ;
+	
+actualList      ::= exp:e
+                {: LinkedList<ExpNode> al = new LinkedList<>();
+                   al.addLast(e);
+                   RESULT = al;
+                :}
+                | actualList:al COMMA exp:e
+                {: al.addLast(e);
+                  RESULT = al;
+                :}
                 ;
 
 type            ::= LOGICAL
