@@ -81,7 +81,7 @@ non terminal VarDeclNode      varDecl;
 non terminal LinkedList       varDeclList;
 non terminal FctnDeclNode     fctnDecl;
 non terminal TupleDeclNode    tupleDecl;
-non terminal DeclListNode     tupleBody;
+non terminal LinkedList       tupleBody;
 non terminal FormalsListNode  formals;
 non terminal LinkedList       formalsList;
 non terminal FormalDeclNode   formalDecl;
@@ -143,6 +143,9 @@ decl            ::= varDecl:v
                 | fctnDecl:f
                 {: RESULT = f;
                 :}
+                | tupleDecl:t
+                {: RESULT = t;
+                :}
                 ;
 
 varDeclList     ::= varDeclList:vl varDecl:v
@@ -157,11 +160,32 @@ varDeclList     ::= varDeclList:vl varDecl:v
 varDecl         ::= type:t id:i DOT
                 {: RESULT = new VarDeclNode(t, i, VarDeclNode.NON_TUPLE);
                 :}
+                | TUPLE id:ti id:i DOT
+                {: TupleNode t = new TupleNode(ti);
+                  RESULT = new VarDeclNode(t, i, 1);
+                :}
                 ;
 
 fctnDecl        ::= type:t id:i formals:fl fctnBody:fb
                 {: 
                    RESULT = new FctnDeclNode(t, i, fl, fb);
+                :}
+                ;
+
+tupleDecl       ::= TUPLE id:i LCURLY tupleBody:tb RCURLY DOT
+                {: 
+                  RESULT = new TupleDeclNode(i, new DeclListNode(tb));
+                :}
+                ;
+	
+tupleBody       ::= tupleBody:tb varDecl:v
+                {: tb.add(v);
+                   RESULT = tb;
+                :}
+                | varDecl:v
+                {: LinkedList<DeclNode> tb = new LinkedList<>();
+                   tb.add(v);
+                   RESULT = tb;
                 :}
                 ;
 

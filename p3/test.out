@@ -29,3 +29,14 @@ void rw {integer h} [
     compare().
     computation(f, 2).
 ]
+tuple Addr {
+    integer doorNum.
+    integer zipCode.
+}.
+tuple Student {
+    integer id.
+    integer age.
+    tupple Addr addr.
+}.
+tupple Student raj.
+tupple Student jack.
