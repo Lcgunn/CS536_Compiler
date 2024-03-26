@@ -153,6 +153,7 @@ class DeclListNode extends ASTnode {
 
     // list of children (DeclNodes)
     private List<DeclNode> myDecls;
+    public SymTable table = new SymTable();
 }
 
 class StmtListNode extends ASTnode {
@@ -334,11 +335,14 @@ abstract class TypeNode extends ASTnode {
 
 class LogicalNode extends TypeNode {
     public LogicalNode() {
+        symbol = new Sym("logical");
     }
 
     public void unparse(PrintWriter p, int indent) {
         p.print("logical");
     }
+
+    private Sym symbol;
 }
 
 class IntegerNode extends TypeNode {
