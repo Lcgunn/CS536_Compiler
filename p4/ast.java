@@ -130,8 +130,14 @@ class ProgramNode extends ASTnode {
         myDeclList.unparse(p, indent);
     }
 
+    public void nameAnalysis(DeclListNode L){
+        mySymTable = new SymTable();
+        L.nameAnalysis(mySymTable);
+    }   
+
     // 1 child
     private DeclListNode myDeclList;
+    private SymTable mySymTable;
 }
 
 class DeclListNode extends ASTnode {
@@ -151,9 +157,35 @@ class DeclListNode extends ASTnode {
         }
     }
 
+    public void nameAnalysis(SymTable T){
+        mySymTable = T;
+        Iterator it = myDecls.iterator();
+        try {
+            while (it.hasNext()) {
+                switch(it.next().getClass().getName()){
+                    case "VarDeclNode":
+                        ((VarDeclNode)it.next()).nameAnalysis(T);
+                        break;
+                    case "FctnDeclNode":
+                        ((FctnDeclNode)it.next()).nameAnalysis(T);
+                        break;
+                    case "FormalDeclNode":
+                        ((FormalDeclNode)it.next()).nameAnalysis(T);
+                        break;
+                    case "TupleDeclNode":
+                        ((TupleDeclNode)it.next()).nameAnalysis(T);
+                        break;
+                }
+            }
+        } catch (NoSuchElementException ex) {
+            System.err.println("unexpected NoSuchElementException in DeclListNode.print");
+            System.exit(-1);
+        }
+    }
+
     // list of children (DeclNodes)
     private List<DeclNode> myDecls;
-    public SymTable table = new SymTable();
+    public SymTable mySymTable;
 }
 
 class StmtListNode extends ASTnode {
@@ -191,6 +223,7 @@ class ExpListNode extends ASTnode {
     // list of children (ExpNodes)
     private List<ExpNode> myExps;
 }
+
 class FormalsListNode extends ASTnode {
     public FormalsListNode(List<FormalDeclNode> S) {
         myFormals = S;
@@ -227,7 +260,6 @@ class FctnBodyNode extends ASTnode {
     private StmtListNode myStmtList;
 }
 
-
 // **********************************************************************
 // ****  DeclNode and its subclasses
 // **********************************************************************
@@ -248,6 +280,10 @@ class VarDeclNode extends DeclNode {
         p.print(" ");
         myId.unparse(p, 0);
         p.println(".");
+    }
+
+    public void nameAnalysis(SymTable T){
+
     }
 
     // 3 children
@@ -281,6 +317,11 @@ class FctnDeclNode extends DeclNode {
         p.println("]\n");
     }
 
+    public void nameAnalysis(SymTable T){
+
+    }
+
+
     // 4 children
     private TypeNode myType;
     private IdNode myId;
@@ -298,6 +339,10 @@ class FormalDeclNode extends DeclNode {
         myType.unparse(p, 0);
         p.print(" ");
         myId.unparse(p, 0);
+    }
+
+    public void nameAnalysis(SymTable T){
+
     }
 
     // 2 children
@@ -319,6 +364,10 @@ class TupleDeclNode extends DeclNode {
         myDeclList.unparse(p, indent+4);
         doIndent(p, indent);
         p.println("}.\n");
+    }
+
+    public void nameAnalysis(SymTable T){
+
     }
 
     // 2 children
@@ -598,6 +647,7 @@ class TrueNode extends ExpNode {
 
     private int myLineNum;
     private int myCharNum;
+    private Sym mySymbol;
 }
 
 class FalseNode extends ExpNode {
@@ -612,6 +662,7 @@ class FalseNode extends ExpNode {
 
     private int myLineNum;
     private int myCharNum;
+    private Sym mySymbol;
 }
 
 class IdNode extends ExpNode {
@@ -628,6 +679,7 @@ class IdNode extends ExpNode {
     private int myLineNum;
     private int myCharNum;
     private String myStrVal;
+    private Sym mySymbol;
 }
 
 class IntLitNode extends ExpNode {
@@ -644,6 +696,7 @@ class IntLitNode extends ExpNode {
     private int myLineNum;
     private int myCharNum;
     private int myIntVal;
+    private Sym mySymbol;
 }
 
 class StrLitNode extends ExpNode {
@@ -660,6 +713,7 @@ class StrLitNode extends ExpNode {
     private int myLineNum;
     private int myCharNum;
     private String myStrVal;
+    private Sym mySymbol;
 }
 
 class TupleAccessNode extends ExpNode {
@@ -697,6 +751,7 @@ class AssignExpNode extends ExpNode {
     // 2 children
     private ExpNode myLhs;
     private ExpNode myExp;
+    private Sym mySymbol;
 }
 
 class CallExpNode extends ExpNode {
@@ -916,7 +971,6 @@ class LessEqNode extends BinaryExpNode {
         p.print(")");
     }
 }
-
 
 class AndNode extends BinaryExpNode {
     public AndNode(ExpNode exp1, ExpNode exp2) {
