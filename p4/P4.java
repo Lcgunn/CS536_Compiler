@@ -56,7 +56,7 @@ public class P4 {
 			// ****** Add name analysis part here ******
         SymTable table = new SymTable();
 		((ProgramNode)root.value).nameAnalysis(table);
-        table.print();
+        
         ((ASTnode)root.value).unparse(outFile, 0);
         outFile.close();
 

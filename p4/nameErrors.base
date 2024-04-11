@@ -1,3 +1,0 @@
-logical a.
-void a.
-integer computation {integer g, integer f} [integer h. i = f + 4. while (g < f) [g++.] return g.]

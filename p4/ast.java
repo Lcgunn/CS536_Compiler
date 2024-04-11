@@ -219,6 +219,18 @@ class ExpListNode extends ASTnode {
         } 
     }
 
+    public void nameAnalysis(SymTable T){
+        Iterator it = myExps.iterator();
+        try {
+            while (it.hasNext()) {
+                ((ExpNode)it.next()).nameAnalysis(T);
+            }
+        } catch (NoSuchElementException ex) {
+            System.err.println("unexpected NoSuchElementException in DeclListNode.print");
+            System.exit(-1);
+        }
+    }
+
     // list of children (ExpNodes)
     private List<ExpNode> myExps;
 }
@@ -301,7 +313,7 @@ class VarDeclNode extends DeclNode {
 
     public void nameAnalysis(SymTable T){
         Sym sym;
-        sym = new Sym(myType.nameAnalysis());
+        sym = new Sym(myType.nameAnalysis());    
         myId.nameAnalysis(T, sym, "var");
     }
 
@@ -338,10 +350,10 @@ class FctnDeclNode extends DeclNode {
 
     public void nameAnalysis(SymTable T){
         // Add scope for within the function
-        T.addScope();
         Sym sym;
         sym = new Sym(myType.nameAnalysis());
         myId.nameAnalysis(T, sym, "function");
+        T.addScope();
         myFormalsList.nameAnalysis(T);
         myBody.nameAnalysis(T);
         // Remove the scope when the function is done
@@ -398,11 +410,18 @@ class TupleDeclNode extends DeclNode {
     }
 
     public void nameAnalysis(SymTable T){
+        SymTable tupleTable = new SymTable();
         Sym sym;
         sym = new Sym("tuple");
-        myId.nameAnalysis(T, sym, "tuple");
-        T.addScope();
-        myDeclList.nameAnalysis(T);
+        try{
+        if(T.lookupGlobal(myId.getTupleName()) != null){
+            //do Nothing
+        }else{
+            myId.nameAnalysis(tupleTable, sym, "tuple");
+            myDeclList.nameAnalysis(tupleTable);
+            myId.nameAnalysis(T, tupleTable.lookupLocal(myId.getTupleName()), "tuple");
+        }
+    }catch(EmptySymTableException e){}
     }
 
     // 2 children
@@ -472,7 +491,7 @@ class TupleNode extends TypeNode {
 
     @Override
     public String nameAnalysis(){
-        return "tuple";
+        return myId.getTupleName();
     }
 	
 	// 1 child
@@ -688,7 +707,11 @@ class ReadStmtNode extends StmtNode {
 
     @Override
     public void nameAnalysis(SymTable T) {
-        myExp.nameAnalysis(T);
+        if(myExp.getClass().getName().equals("TupleAccessNode")){
+
+        }else{
+            myExp.nameAnalysis(T);
+        }
     }
 }
 
@@ -809,17 +832,27 @@ class IdNode extends ExpNode {
         myLineNum = lineNum;
         myCharNum = charNum;
         myStrVal = strVal;
+        mySymbol = new Sym("");
+        decl = false;
     }
 
     public void unparse(PrintWriter p, int indent) {
-        p.print(myStrVal + "<>");
+        if(decl){
+            p.print(myStrVal);
+        }else{
+            p.print(myStrVal + "<" + (mySymbol.getType()) +">");
+        }
+    }
+
+    public String getTupleName(){
+        return myStrVal;
     }
 
     public void nameAnalysis(SymTable T, Sym sym, String declType){
+        decl = true;
         mySymbol = sym;
         boolean badVar = false;
         boolean multVar = false;
-        //boolean unDecl = false;
         
         //if(decl){
             try{
@@ -862,7 +895,11 @@ class IdNode extends ExpNode {
                 checkTable = T.lookupGlobal(myStrVal);
                 if(checkTable == null){
                     unDecl = true;
+                }else{
+                    mySymbol = checkTable;
                 }
+            }else{
+                mySymbol = checkTable;
             }
         }catch(EmptySymTableException e){}
         if(unDecl){
@@ -874,6 +911,7 @@ class IdNode extends ExpNode {
     private int myCharNum;
     private String myStrVal;
     private Sym mySymbol;
+    private boolean decl;
 }
 
 class IntLitNode extends ExpNode {
@@ -937,12 +975,11 @@ class TupleAccessNode extends ExpNode {
     private IdNode myId;
     @Override
     public void nameAnalysis(SymTable T) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'nameAnalysis'");
+        myId.nameAnalysis(T);
+        myLoc.nameAnalysis(T);
     }
 }
 
-// TODO
 class AssignExpNode extends ExpNode {
     public AssignExpNode(ExpNode lhs, ExpNode exp) {
         myLhs = lhs;
@@ -958,9 +995,8 @@ class AssignExpNode extends ExpNode {
     }
 
     public void nameAnalysis(SymTable T){
-        if(myLhs.getClass().getName().equals("IdNode")){
-            ((IdNode)myLhs).nameAnalysis(T);
-        }
+        myLhs.nameAnalysis(T);
+        myExp.nameAnalysis(T);
     }
 
     // 2 children
@@ -969,7 +1005,6 @@ class AssignExpNode extends ExpNode {
     private Sym mySymbol;
 }
 
-// TODO
 class CallExpNode extends ExpNode {
     public CallExpNode(IdNode name, ExpListNode elist) {
         myId = name;
@@ -996,8 +1031,8 @@ class CallExpNode extends ExpNode {
     private ExpListNode myExpList;  // possibly null
     @Override
     public void nameAnalysis(SymTable T) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'nameAnalysis'");
+        myId.nameAnalysis(T);
+        myExpList.nameAnalysis(T);
     }
 }
 

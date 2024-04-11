@@ -1,8 +1,11 @@
-//logical a.
-//logical b.
-//integer c.
-//integer x.
-//integer computation {integer g, integer f} [integer i. integer h. i = f + 4. while (g < f) [g++.] return g.]
-//logical compare {logical k, logical b} [if k [return true.] else [ if b [return true.] return false.]]
-//void rw {integer h} [integer f. read >> h. write << h. compare (). computation(f, 2).]
-//void test {integer b, integer y, logical c} [if b == -1 [ x = 4+3*5-y. while c [ y = y*2+x. x:b++.] ] else [ x = 0. ]]
+logical a.
+logical b.
+integer c.
+integer x.
+integer computation {integer g, integer f} [integer i. integer h. i = f + 4. while (g < f) [g++.] return g.]
+void rw {integer h} [integer f. read >> h. write << h. computation(f, 2).]
+tuple Addr { integer doorNum. integer zipCode.}.
+tuple Student { integer id. integer age. tuple Addr addr.}.
+tuple Student raj.
+tuple Student jack.
+void test {integer b, integer y, logical c} [if b == -1 [ x = 4+3*5-y. while c [ y = y*2+x. x:b++.] ] else [ x = 0. ]]
