@@ -412,15 +412,16 @@ class TupleDeclNode extends DeclNode {
     public void nameAnalysis(SymTable T){
         SymTable tupleTable = new SymTable();
         Sym sym;
-        sym = new Sym("tuple");
+        sym = new Sym("tuple", tupleTable);
         try{
         if(T.lookupGlobal(myId.getTupleName()) != null){
             //do Nothing
         }else{
-            myId.nameAnalysis(tupleTable, sym, "tuple");
             myDeclList.nameAnalysis(tupleTable);
-            myId.nameAnalysis(T, tupleTable.lookupLocal(myId.getTupleName()), "tuple");
+            myId.nameAnalysis(T, sym, "tuple");
         }
+        T.print();
+        tupleTable.print();
     }catch(EmptySymTableException e){}
     }
 
@@ -848,6 +849,10 @@ class IdNode extends ExpNode {
         return myStrVal;
     }
 
+    public Sym getSym(){
+        return mySymbol;
+    }
+
     public void nameAnalysis(SymTable T, Sym sym, String declType){
         decl = true;
         mySymbol = sym;
@@ -907,6 +912,29 @@ class IdNode extends ExpNode {
         }
 
     }
+    
+    public void nameAnalysis(SymTable T, IdNode tupleName){
+        Sym checkTable;
+        boolean unDecl = false;
+        try{
+            SymTable tupleTable = (T.lookupGlobal(tupleName.getSym().getType())).getTable();
+            System.out.println(tupleName.getSym().getType());
+            if(tupleTable == null){
+                unDecl = true;
+            }else{
+                checkTable = tupleTable.lookupLocal(myStrVal);
+                if(checkTable == null){
+                    unDecl = true;
+                }else{
+                    mySymbol = checkTable;
+                }
+        }
+        }catch(EmptySymTableException e){}
+        if(unDecl){
+            ErrMsg.fatal(myLineNum, myCharNum, "Invalid tuple field name");
+        }
+    }
+    
     private int myLineNum;
     private int myCharNum;
     private String myStrVal;
@@ -975,7 +1003,7 @@ class TupleAccessNode extends ExpNode {
     private IdNode myId;
     @Override
     public void nameAnalysis(SymTable T) {
-        myId.nameAnalysis(T);
+        myId.nameAnalysis(T, (IdNode)myLoc);
         myLoc.nameAnalysis(T);
     }
 }
