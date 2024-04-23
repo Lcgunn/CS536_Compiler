@@ -126,6 +126,10 @@ class ProgramNode extends ASTnode {
         myDeclList = L;
     }
 
+    public void typeChecker(){
+        myDeclList.typeChecker();
+    }
+
     /***
      * nameAnalysis
      * Creates an empty symbol table for the outermost scope, then processes
@@ -147,6 +151,12 @@ class ProgramNode extends ASTnode {
 class DeclListNode extends ASTnode {
     public DeclListNode(List<DeclNode> S) {
         myDecls = S;
+    }
+
+    public void typeChecker(){
+        for (DeclNode node : myDecls) {
+            node.typeChecker();
+        }
     }
 
     /***
@@ -194,6 +204,16 @@ class StmtListNode extends ASTnode {
         myStmts = S;
     }
 
+    public void typeChecker(FctnSym symFctn){
+        for(StmtNode node : myStmts){
+            if(node instanceof ReturnStmtNode){
+                ((ReturnStmtNode)node).typeChecker(symFctn);
+            }else{
+                node.typeChecker();
+            }
+        }
+    }
+
     /***
      * nameAnalysis
      * Given a symbol table symTab, process each statement in the list.
@@ -220,6 +240,30 @@ class ExpListNode extends ASTnode {
         myExps = S;
     }
 
+    public int len(){
+        int length = 0;
+        for (ExpNode node : myExps){
+            length++;
+        }
+        return length;
+    }
+
+    public void typeChecker(List<Type> params){
+        for(int i = 0; i < len(); i ++){
+            Type nodeType = null;
+            if(myExps.get(i) instanceof IdNode){
+                nodeType = ((IdNode)myExps.get(i)).sym().getType();
+            }else if(myExps.get(i) instanceof IntLitNode){
+                nodeType = new IntegerType();
+            }else if(myExps.get(i) instanceof StrLitNode){
+                nodeType = new StringType();
+            }
+            if(!nodeType.equals(params.get(i))){
+                ErrMsg.fatal(myExps.get(i).lineNum(), myExps.get(i).charNum(), "Actual type does not match formal type");
+            }
+        }
+    }
+
     /***
      * nameAnalysis
      * Given a symbol table symTab, process each exp in the list.
@@ -244,6 +288,7 @@ class ExpListNode extends ASTnode {
     // list of children (ExpNodes)
     private List<ExpNode> myExps;
 }
+
 class FormalsListNode extends ASTnode {
     public FormalsListNode(List<FormalDeclNode> S) {
         myFormals = S;
@@ -295,6 +340,11 @@ class FctnBodyNode extends ASTnode {
         myStmtList = stmtList;
     }
 
+    public void typeChecker(FctnSym symFctn){
+        myDeclList.typeChecker();
+        myStmtList.typeChecker(symFctn);
+    }
+
     /***
      * nameAnalysis
      * Given a symbol table symTab, do:
@@ -326,6 +376,8 @@ abstract class DeclNode extends ASTnode {
      * Note: a formal decl needs to return a sym
      ***/
     abstract public Sym nameAnalysis(SymTable symTab);
+
+    abstract public void typeChecker();
 }
 
 class VarDeclNode extends DeclNode {
@@ -438,6 +490,11 @@ class VarDeclNode extends DeclNode {
     private int mySize;  // use value NON_TUPLE if this is not a tuple type
 
     public static int NON_TUPLE = -1;
+
+    @Override
+    public void typeChecker() {
+        // do nothing
+    }
 }
 
 class FctnDeclNode extends DeclNode {
@@ -449,6 +506,14 @@ class FctnDeclNode extends DeclNode {
         myId = id;
         myFormalsList = formalList;
         myBody = body;
+    }
+
+    public void typeChecker(){
+        myBody.typeChecker(mySym);
+    }
+
+    public void link(FctnSym symFunc){
+        mySym = symFunc;
     }
 
     /***
@@ -476,6 +541,7 @@ class FctnDeclNode extends DeclNode {
 			else { // add function name to local symbol table
 				try {
 					sym = new FctnSym(myType.type(), myFormalsList.length());
+                    link(sym);
 					symTab.addDecl(name, sym);
 					myId.link(sym);
 				} catch (DuplicateSymNameException ex) {
@@ -532,6 +598,7 @@ class FctnDeclNode extends DeclNode {
     private IdNode myId;
     private FormalsListNode myFormalsList;
     private FctnBodyNode myBody;
+    private FctnSym mySym;
 }
 
 class FormalDeclNode extends DeclNode {
@@ -599,6 +666,10 @@ class FormalDeclNode extends DeclNode {
     // 2 children
     private TypeNode myType;
     private IdNode myId;
+    @Override
+    public void typeChecker() {
+        // Do nothing
+    }
 }
 
 class TupleDeclNode extends DeclNode {
@@ -669,6 +740,10 @@ class TupleDeclNode extends DeclNode {
     // 2 children
     private IdNode myId;
 	private DeclListNode myDeclList;
+    @Override
+    public void typeChecker() {
+        // TODO Auto-generated method stub
+    }
 }
 
 // **********************************************************************
@@ -758,11 +833,17 @@ class TupleNode extends TypeNode {
 
 abstract class StmtNode extends ASTnode {
     abstract public void nameAnalysis(SymTable symTab);
+
+    abstract public void typeChecker();
 }
 
 class AssignStmtNode extends StmtNode {
     public AssignStmtNode(AssignExpNode assign) {
         myAssign = assign;
+    }
+
+    public void typeChecker() {
+        myAssign.typeChecker();
     }
 
     /***
@@ -786,6 +867,14 @@ class AssignStmtNode extends StmtNode {
 class PostIncStmtNode extends StmtNode {
     public PostIncStmtNode(ExpNode exp) {
         myExp = exp;
+    }
+
+    public void typeChecker(){
+        if(myExp instanceof IdNode){
+            if(!(((IdNode)myExp).sym().getType().isIntegerType())){
+                ErrMsg.fatal(((IdNode)this.myExp).lineNum(), ((IdNode)this.myExp).charNum(), "Arithmetic operator used with non-integer operand");
+            }
+        }
     }
     
     /***
@@ -811,6 +900,13 @@ class PostDecStmtNode extends StmtNode {
         myExp = exp;
     }
 
+    public void typeChecker(){
+        if(myExp instanceof IdNode){
+            if(!(((IdNode)myExp).sym().getType().isIntegerType())){
+                ErrMsg.fatal(((IdNode)this.myExp).lineNum(), ((IdNode)this.myExp).charNum(), "Arithmetic operator used with non-integer operand");
+            }
+        }
+    }
     /***
      * nameAnalysis
      * Given a symbol table symTab, perform name analysis on this node's child
@@ -834,6 +930,30 @@ class IfStmtNode extends StmtNode {
         myDeclList = dlist;
         myExp = exp;
         myStmtList = slist;
+    }
+
+    public void typeChecker(){
+        if(myExp instanceof EqualsNode){
+            ((EqualsNode)myExp).typeChecker();
+        }else if(myExp instanceof NotEqualsNode){
+            ((NotEqualsNode)myExp).typeChecker();
+        }else if(myExp instanceof GreaterNode){
+            ((GreaterNode)myExp).typeChecker();
+        }else if(myExp instanceof GreaterEqNode){
+            ((GreaterEqNode)myExp).typeChecker();
+        }else if(myExp instanceof LessNode){
+            ((LessNode)myExp).typeChecker();
+        }else if(myExp instanceof LessEqNode){
+            ((LessEqNode)myExp).typeChecker();
+        }else if(myExp instanceof AndNode){
+            ((AndNode)myExp).typeChecker();
+        }else if(myExp instanceof OrNode){
+            ((OrNode)myExp).typeChecker();
+        }else if(myExp instanceof NotNode){
+            ((NotNode)myExp).typeChecker();
+        }else{
+            ErrMsg.fatal((this.myExp).lineNum(), (this.myExp).charNum(), "Non-logical expression used in if condition");
+        }
     }
     
     /***
@@ -944,6 +1064,10 @@ class IfElseStmtNode extends StmtNode {
     private StmtListNode myThenStmtList;
     private StmtListNode myElseStmtList;
     private DeclListNode myElseDeclList;
+    @Override
+    public void typeChecker() {
+        // TODO Auto-generated method stub
+    }
 }
 
 class WhileStmtNode extends StmtNode {
@@ -952,7 +1076,7 @@ class WhileStmtNode extends StmtNode {
         myDeclList = dlist;
         myStmtList = slist;
     }
-    
+
     /***
      * nameAnalysis
      * Given a symbol table symTab, do:
@@ -990,11 +1114,39 @@ class WhileStmtNode extends StmtNode {
     private ExpNode myExp;
     private DeclListNode myDeclList;
     private StmtListNode myStmtList;
+    @Override
+    public void typeChecker() {
+        // TODO Auto-generated method stub
+    }
 }
 
 class ReadStmtNode extends StmtNode {
     public ReadStmtNode(ExpNode e) {
         myExp = e;
+    }
+
+    /***
+     * typeChecker
+     * Checks exp node type
+     * Returns error if:
+     * - Node is a function
+     * - Node is a tuple
+     * - Node is a tuple variable
+     * - Node is of void type
+     ***/
+    public void typeChecker(){
+        if(myExp instanceof IdNode){
+            Sym mySym = ((IdNode)myExp).sym();
+            if(mySym.getType().isFctnType()){
+                ErrMsg.fatal(((IdNode)myExp).lineNum(), ((IdNode)myExp).charNum(), "Read attempt of function name");
+            }
+            if(mySym.getType().isTupleType()){
+                ErrMsg.fatal(((IdNode)myExp).lineNum(), ((IdNode)myExp).charNum(), "Read attempt of tuple variable");
+            }
+            if(mySym.getType().isTupleDefType()){
+                ErrMsg.fatal(((IdNode)myExp).lineNum(), ((IdNode)myExp).charNum(), "Read attempt of tuple name");
+            }
+        }
     }
 
     /***
@@ -1022,6 +1174,32 @@ class WriteStmtNode extends StmtNode {
     }
 
     /***
+     * typeChecker
+     * Checks exp node type
+     * Returns error if:
+     * - Node is a function
+     * - Node is a tuple
+     * - Node is a tuple variable
+     * - Node is of void type
+     ***/
+    public void typeChecker(){
+        if(myExp instanceof IdNode){
+            Sym mySym = ((IdNode)myExp).sym();
+            if(mySym.getType().isFctnType()){
+                ErrMsg.fatal(((IdNode)myExp).lineNum(), ((IdNode)myExp).charNum(), "Write attempt of function name");
+            }
+            if(mySym.getType().isTupleType()){
+                ErrMsg.fatal(((IdNode)myExp).lineNum(), ((IdNode)myExp).charNum(), "Write attempt of tuple variable");
+            }
+            if(mySym.getType().isTupleDefType()){
+                ErrMsg.fatal(((IdNode)myExp).lineNum(), ((IdNode)myExp).charNum(), "Write attempt of tuple name");
+            }
+        }else if(myExp instanceof CallExpNode){
+            ((CallExpNode)myExp).typeChecker(true);
+        }
+    }
+
+    /***
      * nameAnalysis
      * Given a symbol table symTab, perform name analysis on this node's child
      ***/
@@ -1038,6 +1216,7 @@ class WriteStmtNode extends StmtNode {
 
     // 1 child
     private ExpNode myExp;
+
 }
 
 class CallStmtNode extends StmtNode {
@@ -1061,6 +1240,11 @@ class CallStmtNode extends StmtNode {
 
     // 1 child
     private CallExpNode myCall;
+
+    @Override
+    public void typeChecker() {
+        myCall.typeChecker();
+    }
 }
 
 class ReturnStmtNode extends StmtNode {
@@ -1091,6 +1275,40 @@ class ReturnStmtNode extends StmtNode {
 
     // 1 child
     private ExpNode myExp; // possibly null
+
+    @Override
+    public void typeChecker() {
+        // Shouldn't be used
+    }
+
+    public void typeChecker(FctnSym symFctn){
+        Type returnType = symFctn.getReturnType();
+        if(returnType.isVoidType()){
+            if(myExp != null){
+                ErrMsg.fatal(myExp.lineNum(), myExp.charNum(), "Return with value in void function");
+            }
+        }else{
+            if(myExp == null){
+                ErrMsg.fatal(0, 0, "Return value missing");
+            }else{
+                Type myType = null;
+                if(myExp instanceof IdNode){
+                    myType = ((IdNode)myExp).sym().getType();
+                }else if((myExp instanceof TrueNode) | (myExp instanceof FalseNode)){
+                    myType = new LogicalType();
+                }else if(myExp instanceof IntLitNode){
+                    myType = new IntegerType();
+                }else if(myExp instanceof StrLitNode){
+                    myType = new StringType();
+                }else if(myExp instanceof TupleAccessNode){
+                    myType = ((TupleAccessNode)myExp).sym().getType();
+               }
+                if(!(myType.equals(returnType))){
+                    ErrMsg.fatal((myExp).lineNum(), (myExp).charNum(), "Return value wrong type");
+                }
+            }
+        }
+    }
 }
 
 // **********************************************************************
@@ -1102,6 +1320,18 @@ abstract class ExpNode extends ASTnode {
      * Default version for nodes with no names
      ***/
     public void nameAnalysis(SymTable symTab) { }
+
+        /***
+     * Return the line number for ExpNode
+     ***/
+    public int lineNum() {return 0;};
+    
+    /***
+     * Return the char number for ExpNode
+     ***/
+    public int charNum() {return 0;};
+
+    public void typeChecker(Type myType){}
 }
 
 class TrueNode extends ExpNode {
@@ -1116,6 +1346,16 @@ class TrueNode extends ExpNode {
 
     private int myLineNum;
     private int myCharNum;
+
+    @Override
+    public int lineNum() {
+        return myLineNum;
+    }
+
+    @Override
+    public int charNum() {
+        return myCharNum;
+    }
 }
 
 class FalseNode extends ExpNode {
@@ -1130,6 +1370,16 @@ class FalseNode extends ExpNode {
 
     private int myLineNum;
     private int myCharNum;
+
+    @Override
+    public int lineNum() {
+        return myLineNum;
+    }
+
+    @Override
+    public int charNum() {
+        return myCharNum;
+    }
 }
 
 class IdNode extends ExpNode {
@@ -1222,6 +1472,17 @@ class IntLitNode extends ExpNode {
     private int myLineNum;
     private int myCharNum;
     private int myIntVal;
+
+    @Override
+    public int lineNum() {
+        return myLineNum;
+    }
+
+    @Override
+    public int charNum() {
+        return myCharNum;
+    }
+
 }
 
 class StrLitNode extends ExpNode {
@@ -1238,6 +1499,16 @@ class StrLitNode extends ExpNode {
     private int myLineNum;
     private int myCharNum;
     private String myStrVal;
+
+    @Override
+    public int lineNum() {
+        return myLineNum;
+    }
+
+    @Override
+    public int charNum() {
+        return myCharNum;
+    }
 }
 
 class TupleAccessNode extends ExpNode {
@@ -1389,6 +1660,21 @@ class AssignExpNode extends ExpNode {
         myExp = exp;
     }
 
+    public void typeChecker(){
+        if(myExp instanceof PlusNode){
+            ((PlusNode)myExp).typeChecker();
+        }
+        if(myExp instanceof MinusNode){
+            ((MinusNode)myExp).typeChecker();
+        }
+        if(myExp instanceof TimesNode){
+            ((TimesNode)myExp).typeChecker();
+        }
+        if(myExp instanceof DivideNode){
+            ((DivideNode)myExp).typeChecker();
+        }
+    }
+    
     /***
      * nameAnalysis
      * Given a symbol table symTab, perform name analysis on this node's 
@@ -1421,6 +1707,26 @@ class CallExpNode extends ExpNode {
     public CallExpNode(IdNode name) {
         myId = name;
         myExpList = new ExpListNode(new LinkedList<ExpNode>());
+    }
+
+    public void typeChecker(boolean writeCheck){
+        Sym mySym = myId.sym();
+        if(((FctnSym)mySym).getReturnType().isVoidType()){
+            ErrMsg.fatal(myId.lineNum(), myId.charNum(), "Write attempt of void");
+        }
+    }
+
+    public void typeChecker(){
+        Sym mySym = myId.sym();
+        if(!(mySym.getType().isFctnType())){
+            ErrMsg.fatal(myId.lineNum(), myId.charNum(), "Call attempt on non-function");
+        }else{
+            if(myExpList.len() != ((FctnSym)mySym).getNumParams()){
+                ErrMsg.fatal(myId.lineNum(), myId.charNum(), "Function call with wrong # of args");
+            }else{
+                myExpList.typeChecker(((FctnSym)mySym).getParamTypes());
+            }
+        }
     }
 
     /***
@@ -1480,7 +1786,9 @@ abstract class BinaryExpNode extends ExpNode {
         myExp1.nameAnalysis(symTab);
         myExp2.nameAnalysis(symTab);
     }
-    
+
+    abstract public void typeChecker();
+
     // 2 children
     protected ExpNode myExp1;
     protected ExpNode myExp2;
@@ -1493,6 +1801,12 @@ abstract class BinaryExpNode extends ExpNode {
 class NotNode extends UnaryExpNode {
     public NotNode(ExpNode exp) {
         super(exp);
+    }
+
+    public void typeChecker(){
+       // if(!(myExp.isLogicalType())){
+         //   ErrMsg.fatal(0, 0, "Logical operator used with non-logical operand");
+        //}
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -1523,6 +1837,28 @@ class PlusNode extends BinaryExpNode {
         super(exp1, exp2);
     }
 
+    public void typeChecker(){
+        if(!(this.myExp1 instanceof IntLitNode)){
+            if(this.myExp1 instanceof IdNode){
+                Sym sym1 = ((IdNode)this.myExp1).sym();
+                if(!(sym1.getType().isIntegerType())){
+                    ErrMsg.fatal(((IdNode)this.myExp1).lineNum(), ((IdNode)this.myExp1).charNum(), "Arithmetic operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp1).lineNum(), (this.myExp1).charNum(), "Arithmetic operator used with non-integer operand");
+            }
+        }else if(!(this.myExp2 instanceof IntLitNode)){
+            if(this.myExp2 instanceof IdNode){
+                Sym sym2 = ((IdNode)this.myExp2).sym();
+                if(!(sym2.getType().isIntegerType())){
+                    ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Arithmetic operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Arithmetic operator used with non-integer operand");
+            }
+        }
+    }
+
     public void unparse(PrintWriter p, int indent) {
         p.print("(");
         myExp1.unparse(p, 0);
@@ -1535,6 +1871,28 @@ class PlusNode extends BinaryExpNode {
 class MinusNode extends BinaryExpNode {
     public MinusNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
+    }
+
+    public void typeChecker(){
+        if(!(this.myExp1 instanceof IntLitNode)){
+            if(this.myExp1 instanceof IdNode){
+                Sym sym1 = ((IdNode)this.myExp1).sym();
+                if(!(sym1.getType().isIntegerType())){
+                    ErrMsg.fatal(((IdNode)this.myExp1).lineNum(), ((IdNode)this.myExp1).charNum(), "Arithmetic operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp1).lineNum(), (this.myExp1).charNum(), "Arithmetic operator used with non-integer operand");
+            }
+        }else if(!(this.myExp2 instanceof IntLitNode)){
+            if(this.myExp2 instanceof IdNode){
+                Sym sym2 = ((IdNode)this.myExp2).sym();
+                if(!(sym2.getType().isIntegerType())){
+                    ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Arithmetic operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Arithmetic operator used with non-integer operand");
+            }
+        }
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -1551,6 +1909,28 @@ class TimesNode extends BinaryExpNode {
         super(exp1, exp2);
     }
 
+    public void typeChecker(){
+        if(!(this.myExp1 instanceof IntLitNode)){
+            if(this.myExp1 instanceof IdNode){
+                Sym sym1 = ((IdNode)this.myExp1).sym();
+                if(!(sym1.getType().isIntegerType())){
+                    ErrMsg.fatal(((IdNode)this.myExp1).lineNum(), ((IdNode)this.myExp1).charNum(), "Arithmetic operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp1).lineNum(), (this.myExp1).charNum(), "Arithmetic operator used with non-integer operand");
+            }
+        }else if(!(this.myExp2 instanceof IntLitNode)){
+            if(this.myExp2 instanceof IdNode){
+                Sym sym2 = ((IdNode)this.myExp2).sym();
+                if(!(sym2.getType().isIntegerType())){
+                    ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Arithmetic operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Arithmetic operator used with non-integer operand");
+            }
+        }
+    }
+
     public void unparse(PrintWriter p, int indent) {
         p.print("(");
         myExp1.unparse(p, 0);
@@ -1563,6 +1943,28 @@ class TimesNode extends BinaryExpNode {
 class DivideNode extends BinaryExpNode {
     public DivideNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
+    }
+
+    public void typeChecker(){
+        if(!(this.myExp1 instanceof IntLitNode)){
+            if(this.myExp1 instanceof IdNode){
+                Sym sym1 = ((IdNode)this.myExp1).sym();
+                if(!(sym1.getType().isIntegerType())){
+                    ErrMsg.fatal(((IdNode)this.myExp1).lineNum(), ((IdNode)this.myExp1).charNum(), "Arithmetic operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp1).lineNum(), (this.myExp1).charNum(), "Arithmetic operator used with non-integer operand");
+            }
+        }else if(!(this.myExp2 instanceof IntLitNode)){
+            if(this.myExp2 instanceof IdNode){
+                Sym sym2 = ((IdNode)this.myExp2).sym();
+                if(!(sym2.getType().isIntegerType())){
+                    ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Arithmetic operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Arithmetic operator used with non-integer operand");
+            }
+        }
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -1579,6 +1981,29 @@ class EqualsNode extends BinaryExpNode {
         super(exp1, exp2);
     }
 
+    public void typeChecker(){
+        if(!(this.myExp1 instanceof IntLitNode)){
+            if(this.myExp1 instanceof IdNode){
+                Sym sym1 = ((IdNode)this.myExp1).sym();
+                if(!(sym1.getType().isIntegerType())){
+                    ErrMsg.fatal(((IdNode)this.myExp1).lineNum(), ((IdNode)this.myExp1).charNum(), "Relational operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp1).lineNum(), (this.myExp1).charNum(), "Relational operator used with non-integer operand");
+            }
+        }
+        if(!(this.myExp2 instanceof IntLitNode)){
+            if(this.myExp2 instanceof IdNode){
+                Sym sym2 = ((IdNode)this.myExp2).sym();
+                if(!(sym2.getType().isIntegerType())){
+                    ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Relational operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Relational operator used with non-integer operand");
+            }
+        }
+    }
+
     public void unparse(PrintWriter p, int indent) {
         p.print("(");
         myExp1.unparse(p, 0);
@@ -1591,6 +2016,29 @@ class EqualsNode extends BinaryExpNode {
 class NotEqualsNode extends BinaryExpNode {
     public NotEqualsNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
+    }
+
+    public void typeChecker(){
+        if(!(this.myExp1 instanceof IntLitNode)){
+            if(this.myExp1 instanceof IdNode){
+                Sym sym1 = ((IdNode)this.myExp1).sym();
+                if(!(sym1.getType().isIntegerType())){
+                    ErrMsg.fatal(((IdNode)this.myExp1).lineNum(), ((IdNode)this.myExp1).charNum(), "Relational operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp1).lineNum(), (this.myExp1).charNum(), "Relational operator used with non-integer operand");
+            }
+        }
+        if(!(this.myExp2 instanceof IntLitNode)){
+            if(this.myExp2 instanceof IdNode){
+                Sym sym2 = ((IdNode)this.myExp2).sym();
+                if(!(sym2.getType().isIntegerType())){
+                    ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Relational operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Relational operator used with non-integer operand");
+            }
+        }
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -1607,6 +2055,29 @@ class GreaterNode extends BinaryExpNode {
         super(exp1, exp2);
     }
 
+    public void typeChecker(){
+        if(!(this.myExp1 instanceof IntLitNode)){
+            if(this.myExp1 instanceof IdNode){
+                Sym sym1 = ((IdNode)this.myExp1).sym();
+                if(!(sym1.getType().isIntegerType())){
+                    ErrMsg.fatal(((IdNode)this.myExp1).lineNum(), ((IdNode)this.myExp1).charNum(), "Relational operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp1).lineNum(), (this.myExp1).charNum(), "Relational operator used with non-integer operand");
+            }
+        }
+        if(!(this.myExp2 instanceof IntLitNode)){
+            if(this.myExp2 instanceof IdNode){
+                Sym sym2 = ((IdNode)this.myExp2).sym();
+                if(!(sym2.getType().isIntegerType())){
+                    ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Relational operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Relational operator used with non-integer operand");
+            }
+        }
+    }
+
     public void unparse(PrintWriter p, int indent) {
         p.print("(");
         myExp1.unparse(p, 0);
@@ -1619,6 +2090,29 @@ class GreaterNode extends BinaryExpNode {
 class GreaterEqNode extends BinaryExpNode {
     public GreaterEqNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
+    }
+
+    public void typeChecker(){
+        if(!(this.myExp1 instanceof IntLitNode)){
+            if(this.myExp1 instanceof IdNode){
+                Sym sym1 = ((IdNode)this.myExp1).sym();
+                if(!(sym1.getType().isIntegerType())){
+                    ErrMsg.fatal(((IdNode)this.myExp1).lineNum(), ((IdNode)this.myExp1).charNum(), "Relational operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp1).lineNum(), (this.myExp1).charNum(), "Relational operator used with non-integer operand");
+            }
+        }
+        if(!(this.myExp2 instanceof IntLitNode)){
+            if(this.myExp2 instanceof IdNode){
+                Sym sym2 = ((IdNode)this.myExp2).sym();
+                if(!(sym2.getType().isIntegerType())){
+                    ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Relational operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Relational operator used with non-integer operand");
+            }
+        }
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -1635,6 +2129,29 @@ class LessNode extends BinaryExpNode {
         super(exp1, exp2);
     }
 
+    public void typeChecker(){
+        if(!(this.myExp1 instanceof IntLitNode)){
+            if(this.myExp1 instanceof IdNode){
+                Sym sym1 = ((IdNode)this.myExp1).sym();
+                if(!(sym1.getType().isIntegerType())){
+                    ErrMsg.fatal(((IdNode)this.myExp1).lineNum(), ((IdNode)this.myExp1).charNum(), "Relational operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp1).lineNum(), (this.myExp1).charNum(), "Relational operator used with non-integer operand");
+            }
+        }
+        if(!(this.myExp2 instanceof IntLitNode)){
+            if(this.myExp2 instanceof IdNode){
+                Sym sym2 = ((IdNode)this.myExp2).sym();
+                if(!(sym2.getType().isIntegerType())){
+                    ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Relational operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Relational operator used with non-integer operand");
+            }
+        }
+    }
+
     public void unparse(PrintWriter p, int indent) {
         p.print("(");
         myExp1.unparse(p, 0);
@@ -1649,6 +2166,29 @@ class LessEqNode extends BinaryExpNode {
         super(exp1, exp2);
     }
 
+    public void typeChecker(){
+        if(!(this.myExp1 instanceof IntLitNode)){
+            if(this.myExp1 instanceof IdNode){
+                Sym sym1 = ((IdNode)this.myExp1).sym();
+                if(!(sym1.getType().isIntegerType())){
+                    ErrMsg.fatal(((IdNode)this.myExp1).lineNum(), ((IdNode)this.myExp1).charNum(), "Relational operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp1).lineNum(), (this.myExp1).charNum(), "Relational operator used with non-integer operand");
+            }
+        }
+        if(!(this.myExp2 instanceof IntLitNode)){
+            if(this.myExp2 instanceof IdNode){
+                Sym sym2 = ((IdNode)this.myExp2).sym();
+                if(!(sym2.getType().isIntegerType())){
+                    ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Relational operator used with non-integer operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Relational operator used with non-integer operand");
+            }
+        }
+    }
+
     public void unparse(PrintWriter p, int indent) {
         p.print("(");
         myExp1.unparse(p, 0);
@@ -1658,10 +2198,32 @@ class LessEqNode extends BinaryExpNode {
     }
 }
 
-
 class AndNode extends BinaryExpNode {
     public AndNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
+    }
+
+    public void typeChecker(){
+        if(!(this.myExp1 instanceof TrueNode) | !(this.myExp1 instanceof FalseNode)){
+            if(this.myExp1 instanceof IdNode){
+                Sym sym1 = ((IdNode)this.myExp1).sym();
+                if(!(sym1.getType().isLogicalType())){
+                    ErrMsg.fatal(((IdNode)this.myExp1).lineNum(), ((IdNode)this.myExp1).charNum(), "Logical operator used with non-logical operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp1).lineNum(), (this.myExp1).charNum(), "Logical operator used with non-logical operand");
+            }
+        }
+        if(!(this.myExp2 instanceof TrueNode) | !(this.myExp2 instanceof FalseNode)){
+            if(this.myExp2 instanceof IdNode){
+                Sym sym2 = ((IdNode)this.myExp2).sym();
+                if(!(sym2.getType().isLogicalType())){
+                    ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Logical operator used with non-logical operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Logical operator used with non-logical operand");
+            }
+        }
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -1676,6 +2238,29 @@ class AndNode extends BinaryExpNode {
 class OrNode extends BinaryExpNode {
     public OrNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
+    }
+
+    public void typeChecker(){
+        if(!(this.myExp1 instanceof TrueNode) | !(this.myExp1 instanceof FalseNode)){
+            if(this.myExp1 instanceof IdNode){
+                Sym sym1 = ((IdNode)this.myExp1).sym();
+                if(!(sym1.getType().isLogicalType())){
+                    ErrMsg.fatal(((IdNode)this.myExp1).lineNum(), ((IdNode)this.myExp1).charNum(), "Logical operator used with non-logical operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp1).lineNum(), (this.myExp1).charNum(), "Logical operator used with non-logical operand");
+            }
+        }
+        if(!(this.myExp2 instanceof TrueNode) | !(this.myExp2 instanceof FalseNode)){
+            if(this.myExp2 instanceof IdNode){
+                Sym sym2 = ((IdNode)this.myExp2).sym();
+                if(!(sym2.getType().isLogicalType())){
+                    ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Logical operator used with non-logical operand");
+                }
+            }else{
+                ErrMsg.fatal((this.myExp2).lineNum(), (this.myExp2).charNum(), "Logical operator used with non-logical operand");
+            }
+        }
     }
 
     public void unparse(PrintWriter p, int indent) {

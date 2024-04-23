@@ -1,0 +1,22 @@
+tuple Addr<tuple> {
+    integer doorNum<integer>.
+    integer zipCode<integer>.
+}.
+
+tuple Student<tuple> {
+    integer id<integer>.
+    integer age<integer>.
+    tuple Addr addr<Addr>.
+}.
+
+tuple Student raj<Student>.
+logical fake_func<logical>.
+void void_func<->void>{} [
+]
+
+logical test_relational_operators<integer,integer,logical,logical->logical>{integer x<integer>, integer y<integer>, logical b<logical>, logical c<logical>} [
+    if (x<integer> > y<integer>) [
+        return False.
+    ]
+]
+

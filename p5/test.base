@@ -1,0 +1,6 @@
+tuple Addr { integer doorNum. integer zipCode.}.
+tuple Student { integer id. integer age. tuple Addr addr.}.
+tuple Student raj.
+logical fake_func.
+void void_func {} []
+logical test_relational_operators {integer x, integer y, logical b, logical c} [if (x > y) [return False.]]

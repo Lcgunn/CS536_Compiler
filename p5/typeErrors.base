@@ -1,0 +1,16 @@
+tuple Addr { integer doorNum. integer zipCode.}.
+tuple Student { integer id. integer age. tuple Addr addr.}.
+tuple Student raj.
+logical fake_func.
+void void_func {} []
+void test_write_errors {} [write << void_func. write << Student. write << raj. write << void_func().]
+void test_read_errors {} [read >> test_write_errors. read >> Addr. read >> raj.]
+integer valid_function {integer g, integer f} [integer i. integer h. i = f + 4. while (g < f) [g++.] return g.]
+void test_call_errors {integer a, logical b} [a(). valid_function(a). valid_function(b). valid_function(b, "2"). valid_function(a, 2).]
+logical invalid_void_return {} [return.]
+void invalid_return {} [return raj.]
+logical wrong_type_return {integer x} [return x.]
+logical wrong_type_return_2 {integer x} [return 2.]
+logical wrong_type_return_3 {integer x} [return raj.]
+integer test_arithmetic_errors {integer a, logical b, logical c} [c++. b--. a = b + c. a = b - c. a = b * c. a = b / c. return a.]
+logical test_relational_errors {integer x, integer y, logical b, logical c} [if x > b [return False.]]
