@@ -1,3 +1,45 @@
+$logical bbb.
+$tuple R { integer a. }.
+$tuple R q.
+
+$void f{integer p1, logical p2} [
+$]
+
+$void main{} [
+$    integer aaa.
+
+    $ some errors involving illegal operations on functions
+$    aaa = f + f.
+$    bbb = f == 3.
+$    bbb = f > main.
+$    bbb = f == f.
+
+    $ some errors involving bad function calls 
+$    aaa().
+$    f().
+$    f(5).
+$    f(aaa, aaa).
+    $f(q, q:a).
+$    R().
+
+    $ some errors involving tuples 
+$    q = 5.
+$    q = q.
+$    read >> R.
+$    q = True | 3.
+$    bbb = R & q:a.
+
+    $ error involving return
+$    return 10.
+
+    $ other type errors 
+$    aaa = aaa + (~False).
+$    aaa = aaa + "foo".
+$    bbb = aaa.
+
+    $ don't give too many or too few error messages here 
+$    bbb = (aaa + True) & (bbb < True).
+$]
 tuple Addr { integer doorNum. integer zipCode.}.
 tuple Student { integer id. integer age. tuple Addr addr.}.
 tuple Student raj.
@@ -12,5 +54,6 @@ void invalid_return {} [return raj.]
 logical wrong_type_return {integer x} [return x.]
 logical wrong_type_return_2 {integer x} [return 2.]
 logical wrong_type_return_3 {integer x} [return raj.]
-integer test_arithmetic_errors {integer a, logical b, logical c} [c++. b--. a = b + c. a = b - c. a = b * c. a = b / c. return a.]
-logical test_relational_errors {integer x, integer y, logical b, logical c} [if x > b [return False.]]
+integer test_arithmetic_errors {integer a, logical b, logical c} [c++. b--. a = b + c. a = b - c. a = b * c. a = b / wrong_type_return(a). return a.]
+logical test_relational_errors {integer x, integer y, logical b, logical c} [if x > b [return False.] if (x + y) [] else [] while (~y) [x++.] while (wrong_type_return_3(x) > y) [ y--.]]
+void test_equalities {integer y, integer x} [if(y == wrong_type_return(x)) [] while(y ~= wrong_type_return(x)) [] if(wrong_type_return ~= valid_function) [] while(void_func() == void_func()) []]

@@ -14,6 +14,16 @@ logical fake_func<logical>.
 void void_func<->void>{} [
 ]
 
+integer valid_function<integer,integer->integer>{integer g<integer>, integer f<integer>} [
+    integer i<integer>.
+    integer h<integer>.
+    i<integer> = (f<integer> + 4).
+    while (g<integer> < f<integer>) [
+        g<integer>++.
+    ]
+    return g<integer>.
+]
+
 logical test_relational_operators<integer,integer,logical,logical->logical>{integer x<integer>, integer y<integer>, logical b<logical>, logical c<logical>} [
     if (x<integer> > y<integer>) [
         return False.

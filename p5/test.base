@@ -3,4 +3,5 @@ tuple Student { integer id. integer age. tuple Addr addr.}.
 tuple Student raj.
 logical fake_func.
 void void_func {} []
+integer valid_function {integer g, integer f} [integer i. integer h. i = f + 4. while (g < f) [g++.] return g.]
 logical test_relational_operators {integer x, integer y, logical b, logical c} [if (x > y) [return False.]]
