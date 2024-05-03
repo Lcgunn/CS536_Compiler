@@ -1,0 +1,7 @@
+integer a.
+logical b.
+void main{} [
+    integer x.
+]
+
+void new_function{}[]
