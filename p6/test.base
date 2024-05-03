@@ -2,6 +2,21 @@ integer a.
 logical b.
 void main{} [
     integer x.
+    x = 2.
+    write << "Hello world!\n".
+    write << x.
+    write << "\n".
+    if (2 == 0)[
+        write << "Failed!\n".
+    ]
+    if("ab" ~= "ac")[
+        write << "Success!\n".
+    ]
+    if (1 > 0)[
+        write << "Failed!\n".
+    ]
+    x = 3.
+    read >> x.
 ]
 
-void new_function{}[]
+void myFunc{} [main().]
